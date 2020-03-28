@@ -1,0 +1,22 @@
+[build-system]
+build-backend = "poetry.masonry.api"
+requires = ["poetry>=0.12"]
+
+[tool]
+[tool.poetry]
+authors = ["Your Name <you@example.com>"]
+description = ""
+name = "colorlesswoodenradius"
+version = "0.1.0"
+[tool.poetry.dependencies]
+Flask = "^1.1"
+python = "^3.7"
+"discord.py" = "^1.3"
+asyncio = "^3.4"
+config = "^0.4.2"
+Pillow = "^7.0"
+jishaku = "^1.18"
+python-box = "^4.2"
+"nekos.py" = "^1.0"
+dadjokes = "^1.3"
+[tool.poetry.dev-dependencies]

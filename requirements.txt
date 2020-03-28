@@ -1,0 +1,14 @@
+discord.py
+flask
+asyncio
+Pillow
+nekos.py
+python-box
+dadjokes
+googletrans
+requests
+animals.py
+pylint
+jishaku
+psutil
+gunicorn
