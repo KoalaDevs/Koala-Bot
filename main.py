@@ -4,6 +4,8 @@ import os
 import requests
 import aiohttp
 import box
+import datetime
+import platform
 
 from dadjokes import *
 from discord.ext import commands
@@ -21,10 +23,6 @@ client.launch_time = datetime.utcnow()
 async def on_ready():
   await client.change_presence(activity = discord.Game(name = 'with your mom'))
 print("#################\n# Bot is online #\n#################")
-#print("Running as: " + client.user.name)
-#print(f'Using Client ID: #{client.user.id}')
-#print("Discord.py: " + discord.__version__)
-#print("Created by Cranky Supertoon#7376")
 
 #Join Logs
 @client.event
@@ -150,7 +148,7 @@ async def reverse(ctx, *, text):
 async def meme(ctx):
   """Sends you random meme"""
   r = await aiohttp.ClientSession().get(
-    "https://www.reddit.com/r/dankmemes/top.json?sort=new&t=day&limit=500"
+    "https://www.reddit.com/r/dankmemes/top.json?sort=new&t=day&limit=100"
     )
   r = await r.json()
   r = box.Box(r) 
@@ -163,12 +161,30 @@ async def meme(ctx):
   embed.set_image(url=img)
   await ctx.send(embed=embed)
 
+#Meme Search Command
+@client.command()
+async def memesearch(ctx, meme_term):
+    """Sends you random meme"""
+    url_comb = "https://www.reddit.com/r/dankmemes/search.json?sort=new&limit=100&q=www.reddit.com/r/dankmemes&q=" + meme_term
+    r = await aiohttp.ClientSession().get(url_comb)
+    r = await r.json()
+    r = box.Box(r) 
+    data = random.choice(r.data.children).data
+    img = data.url
+    title =  data.title
+    url_base = data.permalink
+    url = "https://reddit.com" + url_base
+    embed = discord.Embed(title=title, url=url, color=discord.Color.blurple())
+    embed.set_image(url=img)
+    await ctx.send(embed=embed)
+
+
 #RFTB Command
 @client.command(aliases=['r/ftb', 'r/feedthebeast', "rfeedthebeast"])
 async def rftb(ctx):
   """Sends you a random post from r/feedthebeast"""
   r = await aiohttp.ClientSession().get(
-    "https://www.reddit.com/r/feedthebeast/top.json?sort=new&t=day&limit=500"
+    "https://www.reddit.com/r/feedthebeast/top.json?sort=new&t=day&limit=100"
     )
   r = await r.json()
   r = box.Box(r) 
@@ -180,6 +196,22 @@ async def rftb(ctx):
   embed = discord.Embed(title=title, url=url, color=discord.Color.blurple())
   embed.set_image(url=img)
   await ctx.send(embed=embed)
+
+#Reddit Wide Search Command
+@client.command()
+async def reddit(ctx, meme_term):
+    url_comb = "https://www.reddit.com/search.json?sort=new&limit=100&q=" + meme_term
+    r = await aiohttp.ClientSession().get(url_comb)
+    r = await r.json()
+    r = box.Box(r) 
+    data = random.choice(r.data.children).data
+    img = data.url
+    title =  data.title
+    url_base = data.permalink
+    url = "https://reddit.com" + url_base
+    embed = discord.Embed(title=title, url=url, color=discord.Color.blurple())
+    embed.set_image(url=img)
+    await ctx.send(embed=embed)
 
 #Dadjoke Command
 @client.command()
@@ -214,6 +246,49 @@ async def drama(ctx):
 async def fdrama(ctx):
     fdrama = requests.get('https://fabric-drama.herokuapp.com/txt')
     await ctx.send(fdrama.text)
+
+#Stats Command
+@client.command()
+async def stats(ctx):
+
+    pythonVersion = platform.python_version()
+    dpyVersion = discord.__version__
+    serverCount = len(client.guilds)
+    memberCount = len(set(client.get_all_members()))
+
+    embed = discord.Embed(title=f'{client.user.name} Stats',
+                          description='\uFEFF',
+                          colour=ctx.author.colour,
+                          timestamp=ctx.message.created_at)
+
+    embed.add_field(name='Python Version:', value=f"{pythonVersion}", inline=False)
+    embed.add_field(name='Discord.PY Version', value=f"{dpyVersion}", inline=False)
+    embed.add_field(name='Total Guilds:', value=f"{serverCount}", inline=False)
+    embed.add_field(name='Total Users:', value=f"{memberCount}", inline=False)
+    embed.add_field(name='Bot Developers:', value="<@543576276108181506>")
+
+    embed.set_footer(text=f"Yours truly, | {client.user.name}")
+    embed.set_author(name=client.user.name, icon_url=client.user.avatar_url)
+
+    await ctx.send(embed=embed)
+
+#Poll Command
+@client.command(pass_context=True)
+async def poll(ctx, *args):
+	mesg = ' '.join(args)
+	await ctx.message.delete()
+	embed = discord.Embed(title='A Poll has Started !',
+			      description='{0}'.format(mesg),
+			      color=0x00FF00)
+	
+	embed.set_footer(text='Poll created by: {0} • React to vote!'.format(ctx.message.author))
+	
+	embed_message = await ctx.send(embed=embed)
+	
+	await embed_message.add_reaction( '👍')
+	await embed_message.add_reaction('👎')
+	await embed_message.add_reaction('🤷')
+
 
 #Run Bot
 keep_alive()
