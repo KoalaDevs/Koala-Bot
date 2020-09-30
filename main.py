@@ -1,43 +1,39 @@
-import aiohttp
-import asyncio
-import box
-import config
-import datetime
 import discord
-import jishaku
-import json
-import nekos
-import os
-import platform
 import random
+import os
 import requests
-import re
-import typing
+import aiohttp
+import box
+
 from dadjokes import *
-from datetime import datetime
 from discord.ext import commands
-from webserver import keepalive
+from datetime import datetime
+from keep_alive import keep_alive
 
-client = commands.Bot(description = "Rob Bot", command_prefix = "!")
-#client.remove_command('help')
-client.remove_command('frizzy')
+
+#Core Bot
+client = commands.Bot(description = "Koala Bot", command_prefix = "!")
+client.remove_command('help')
 client.launch_time = datetime.utcnow()
-EQUAL_REGEX = re.compile(r"""(\w+)\s*=\s*["'](.+?)["']""")
 
+#Starting Bot
 @client.event
 async def on_ready():
-    await client.change_presence(activity=discord.Game(name='A Netplay Game'))
-    print("#################\n# Bot is online #\n#################")
-    print("Running as: " + client.user.name)
-    print("Discord.py: " + discord.__version__)
-    print("Created by Cranky Supertoon#7376")
+  await client.change_presence(activity = discord.Game(name = 'with your mom'))
+print("#################\n# Bot is online #\n#################")
+#print("Running as: " + client.user.name)
+#print(f'Using Client ID: #{client.user.id}')
+#print("Discord.py: " + discord.__version__)
+#print("Created by Cranky Supertoon#7376")
 
+#Join Logs
 @client.event
 async def on_member_join(member):
-  welcomechannel = client.get_channel(684180084307001423)
-  staffwelcomechannel = client.get_channel(691010936500256859)
+  welcomechannel = client.get_channel(759864899706290187)
+  staffwelcomechannel = client.get_channel(759914456859279360)
   jl = [f"We've got cookies {member.mention}!",
     f"Isn't there a discord server for memes like {member.mention}?",
+    f"I hope {member.mention} likes Sodium?",
     f"October 31st, Halloween, November 1st, beginning of Hanukkah and Christmas, what is this {member.mention}!",
     f"{member.mention}, Do you like spooky? I like spooky, SPOOOOOKY!!!",
     f"The cake is a lie, or is it {member.mention}?",
@@ -70,25 +66,72 @@ async def on_member_join(member):
   await welcomechannel.send(f"{jlrandom}")
   await staffwelcomechannel.send(f"{member} Joined. Account created on {member.created_at}")
 
+@client.event
+async def on_member_remove(member):
+  channel = client.get_channel(759864899706290187)
+  staff_channel = client.get_channel(759914456859279360)
+  await channel.send(f"{member.mention} was blown up by a Creeper")
+  await staff_channel.send(f"{member} left")
+
+
+
+#Suggestions
+@client.event
+async def on_message(message):
+  if message.channel.id == 759913865848553513:
+    await message.add_reaction('👍')
+    await message.add_reaction('👎')
+  await client.process_commands(message)
+
+#Help Command
+@client.command()
+async def help(ctx):
+  author = ctx.message.author
+  embed = discord.Embed(color = discord.Color.orange())
+  embed.set_author(name="Commands:")
+
+  #General Comamnds
+  embed.add_field(name="General", value="!help - Shows This Message\n\n!ping - Says Pong Back To You\n\n!uptime - Bot Uptime Counter\n\n!server - Shows Server Info", inline=False)
+
+  #Fun Comamnds
+  embed.add_field(name="Fun", value="!toss - Coin Flip\n\n!dadjoke - Give a Dad Joke\n\n!dice - Roll 1-6\n\n!reverse - Reverses the given text\n\n!meme - Gives a random meme\n\n!r/feedthebeast - shows a random post from this subreddit.\n\n!drama - Some random Minecraft Related Drama thing.\n\n\!fdrama - Some random Minecraft Fabric related drama thing.", inline=False)
+
+  #Launcher Specific
+  embed.add_field(name="Launcher", value="!java - Explain how to install Java\n\n!javainfo - Access info about what Java is\n\n!log - Explain how to read the launchers log", inline=False)
+  await ctx.send(author, embed=embed)
+
+#Info Command
+@client.command("server")
+async def s_info(ctx):
+    server = ctx.guild
+    #icon = server.icon_url_as(size=256)
+    #icon = ("\uFEFF")
+    embed = discord.Embed(title=f"Server info for {server.name}", description=None, colour=0x98FB98)
+    #embed.set_thumbnail(url=icon)
+    # Basic info -- Name, Region, ID, Owner (USER+descrim, ID), Creation date, member count
+    embed.add_field(name="Name", value=server.name, inline=False)
+    embed.add_field(name="Region", value=server.region, inline=True)
+    embed.add_field(name="ID", value=server.id, inline=True)
+    embed.add_field(name="Owner", value=f"{server.owner.name}**-**{server.owner.id}", inline=True)
+    embed.add_field(name="Creation Date", value=f"{server.created_at}", inline=True)
+    #embed.add_field(name="Server Icon Url", value=server.icon_url, inline=False)
+    embed.add_field(name="Member Count", value=server.member_count, inline=True)
+    await ctx.send(content=None, embed=embed)
+
+#Ping Command
 @client.command()
 async def ping(ctx):
     """Ping Pong"""
     await ctx.send('Pong!')
 
-@client.command()
-async def uptime(ctx):
-    delta_uptime = datetime.utcnow() - client.launch_time
-    hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
-    minutes, seconds = divmod(remainder, 60)
-    days, hours = divmod(hours, 24)
-    await ctx.send(f"{days}d, {hours}h, {minutes}m, {seconds}s")
-
+#Roll Dice Command
 @client.command()
 async def dice(ctx):
   """Rolls the dice"""
   cont = random.randint(1, 6)
   await ctx.send("You Rolled **{}**".format(cont))
 
+#Coin Flip Command
 @client.command()
 async def toss(ctx):
   """Put the toss"""
@@ -96,31 +139,83 @@ async def toss(ctx):
   rch = random.choice(ch)
   await ctx.send(f"You got **{rch}**")
 
+#Reverse Text Command
+@client.command()
+async def reverse(ctx, *, text):
+  """Reverse the given text"""
+  await ctx.send("".join(list(reversed(str(text)))))
+
+#Meme Command
+@client.command()
+async def meme(ctx):
+  """Sends you random meme"""
+  r = await aiohttp.ClientSession().get(
+    "https://www.reddit.com/r/dankmemes/top.json?sort=new&t=day&limit=500"
+    )
+  r = await r.json()
+  r = box.Box(r) 
+  data = random.choice(r.data.children).data
+  img = data.url
+  title =  data.title
+  url_base = data.permalink
+  url = "https://reddit.com" + url_base
+  embed = discord.Embed(title=title, url=url, color=discord.Color.blurple())
+  embed.set_image(url=img)
+  await ctx.send(embed=embed)
+
+#RFTB Command
+@client.command(aliases=['r/ftb', 'r/feedthebeast', "rfeedthebeast"])
+async def rftb(ctx):
+  """Sends you a random post from r/feedthebeast"""
+  r = await aiohttp.ClientSession().get(
+    "https://www.reddit.com/r/feedthebeast/top.json?sort=new&t=day&limit=500"
+    )
+  r = await r.json()
+  r = box.Box(r) 
+  data = random.choice(r.data.children).data
+  img = data.url
+  title =  data.title
+  url_base = data.permalink
+  url = "https://reddit.com" + url_base
+  embed = discord.Embed(title=title, url=url, color=discord.Color.blurple())
+  embed.set_image(url=img)
+  await ctx.send(embed=embed)
+
+#Dadjoke Command
 @client.command()
 async def dadjoke(ctx):
   """Sends the dadjokes"""
   async with ctx.typing():
       await ctx.send(Dadjoke().joke)
 
-@client.command("info")
-async def s_info(ctx):
-    server = ctx.guild
-    try:
-        icon = server.icon_url_as(size=256)
-    except Exception as e:
-        icon = ("\uFEFF")
-    embed = discord.Embed(title=f"Server info for {server.name}", description=None, colour=0x98FB98)
-    embed.set_thumbnail(url=icon)
-    # Basic info -- Name, Region, ID, Owner (USER+descrim, ID), Creation date, member count
-    embed.add_field(name="Name", value=server.name, inline=False)
-    embed.add_field(name="Region", value=server.region, inline=True)
-    embed.add_field(name="ID", value=server.id, inline=True)
-    embed.add_field(name="Owner", value=f"{server.owner.name}**-**{server.owner.id}", inline=True)
-    embed.add_field(name="Creation Date", value=f"{server.created_at}", inline=True)
-    embed.add_field(name="Server Icon Url", value=server.icon_url, inline=False)
-    embed.add_field(name="Member Count", value=server.member_count, inline=True)
-    await ctx.send(content=None, embed=embed)
+#Log Command
+@client.command(aliases=['logs'])
+async def log(ctx):
+  await ctx.send('To View your Log click **>_** near the Top Left of the Launcher and then go to console. If you are further having issues feel free to upload the log to a paste site.\nHeres a list of some paste sites:\n      - <https://gist.github.com/>\n      - <https://pastebin.com/>\n      - <https://hastebin.com/>\n      - <https://paste.feed-the-beast.com/>\n      - <https://paste.dimdev.org/>')
 
-keepalive()
+#Java Command
+@client.command()
+async def java(ctx):
+  await ctx.send('**Koala Launcher Requires a 64-bit version of Java 8.**\n\n**Windows:**\n<https://adoptopenjdk.net> Grab the `x64 JRE` with a `.msi` extension.\n\n**MacOS**\n<https://adoptopenjdk.net> Grab the `x64` bit `.pkg`\n\n**Arch Linux / Manjaro**\n`sudo pacman -S jre8-openjdk`  **or**  `yay -S jdk8-openjdk`\n\n**Debian / Ubuntu**\n`sudo apt-get install openjdk-8-jre`\n\n**RHEL / Fedora**\n`sudo dnf install java-1.8.0-openjdk`\n\n\nFor more info type `!javainfo`')
+
+#Java Info Command
+@client.command()
+async def javainfo(ctx):
+  await ctx.send('- **Java Virtual Machine (JVM)** - The core part that turns java code into native code for your specific operation system (OS).\n- **Java Runtime Enviroment (JRE)** - The part of Java that allows java applications to work. In turn it bundles the **JVM**\n- **Java Development Kit (JDK)** - The part of java that allows developers like Mojang to make Java based applications. Also includes the **JRE** and **JVM**\n\n**Java SE** is a closed source piece of software by **Oracle** that is different from the open source **OpenJDK** project. Either version works for **Minecraft**')
+
+#drama command
+@client.group()
+async def drama(ctx):
+    drama = requests.get('https://mc-drama.herokuapp.com/raw')
+    await ctx.send(drama.text)
+
+#fabric_drama command
+@client.group()
+async def fdrama(ctx):
+    fdrama = requests.get('https://fabric-drama.herokuapp.com/txt')
+    await ctx.send(fdrama.text)
+
+#Run Bot
+keep_alive()
 TOKEN = os.environ.get("DISCORD_BOT_SECRET")
 client.run(TOKEN)
