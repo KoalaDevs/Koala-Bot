@@ -64,14 +64,14 @@ async def on_member_join(member):
     ]
   jlrandom = random.choice(jl)
   await welcomechannel.send(f"{jlrandom}")
-  await staffwelcomechannel.send(f"{member} Joined. Account created on {member.created_at}")
+  await staffwelcomechannel.send(f"{member.mention} Joined. Account created on {member.created_at}")
 
 @client.event
 async def on_member_remove(member):
   channel = client.get_channel(759864899706290187)
   staff_channel = client.get_channel(759914456859279360)
   await channel.send(f"{member.mention} was blown up by a Creeper")
-  await staff_channel.send(f"{member} left")
+  await staff_channel.send(f"{member.mention} left")
 
 
 
